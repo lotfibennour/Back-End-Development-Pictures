@@ -35,7 +35,9 @@ def count():
 ######################################################################
 @app.route("/picture", methods=["GET"])
 def get_pictures():
-    pass
+    """return data"""
+    if data:
+        return jsonify(data), 200
 
 ######################################################################
 # GET A PICTURE
@@ -44,7 +46,11 @@ def get_pictures():
 
 @app.route("/picture/<int:id>", methods=["GET"])
 def get_picture_by_id(id):
-    pass
+    picture = next((p for p in data if p["id"] == id), None)
+    if picture:
+        return jsonify(picture), 200
+    else:
+        return jsonify({"error": "Picture not found"}), 404
 
 
 ######################################################################
@@ -52,7 +58,14 @@ def get_picture_by_id(id):
 ######################################################################
 @app.route("/picture", methods=["POST"])
 def create_picture():
-    pass
+    new_picture = request.json
+    existing_picture = next((p for p in data if p['id'] == new_picture['id']), None)
+    
+    if existing_picture:
+        return jsonify({"Message": f"picture with id {new_picture['id']} already present"}), 302
+    
+    data.append(new_picture)
+    return jsonify(new_picture), 201
 
 ######################################################################
 # UPDATE A PICTURE
@@ -61,11 +74,29 @@ def create_picture():
 
 @app.route("/picture/<int:id>", methods=["PUT"])
 def update_picture(id):
-    pass
+    picture = next((p for p in data if p["id"] == id), None)
+    if not picture:
+        return jsonify({"error": "Picture not found"}), 404
+    
+    updated_picture = request.json
+    
+    # Update the picture's attributes
+    for key, value in updated_picture.items():
+        if key in picture:
+            picture[key] = value
+    
+    return jsonify(picture), 200
 
 ######################################################################
 # DELETE A PICTURE
 ######################################################################
 @app.route("/picture/<int:id>", methods=["DELETE"])
 def delete_picture(id):
-    pass
+    original_length = len(data)
+    picture_to_delete = next((p for p in data if p["id"] == id), None)
+    
+    if picture_to_delete:
+        data.remove(picture_to_delete)
+        return '', 204
+    else:
+        return jsonify({"error": "Picture not found"}), 404
